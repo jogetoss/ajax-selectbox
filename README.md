@@ -1,6 +1,6 @@
 # Description
 
-This repository is meant to serve as a general template for how to set up new repositories in the JogetOSS organization. 
+This bundle contains AJAX Select Box Plugin. This Plugin is a new form element that uses AJAX to retrieve options by populating the select box based on the selected datalist. Please refer to its [documentation and sample demo app.](https://marketplace.joget.org/jw/web/userview/mp/mpp/_/vad?id=APP_ajaxSelectBoxDemo).
 
 # Getting Help
 
