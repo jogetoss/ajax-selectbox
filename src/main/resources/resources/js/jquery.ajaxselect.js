@@ -87,6 +87,10 @@
                                     params = "?" + params; 
                                 }
                             }
+                            // reset ajaxcalls if not exist in current ajax calls
+                            if ($.inArray(params + "|" + keyword, ajaxcalls) === -1) {
+                                ajaxcalls = [];
+                            }
                             
                             if ($.inArray(params + "|" + keyword, ajaxcalls) !== -1) {
                                 return;
