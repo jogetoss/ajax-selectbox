@@ -116,6 +116,7 @@
                                     var hasChanges = false;
                                     $(element).empty();
                                     for (var i=0, len=data.length; i < len; i++) {
+                                        selectoptions = [];
                                         if ($.inArray(data[i].value, selectoptions) === -1) {
                                             var selected = "";
                                             if ($.inArray(data[i].value, values) !== -1) {
