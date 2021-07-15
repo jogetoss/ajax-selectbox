@@ -291,7 +291,7 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
             setProperty("displayField", SecurityUtil.validateStringInput(request.getParameter("_displayField")));
             setProperty("allowEmpty", SecurityUtil.validateStringInput(request.getParameter("_allowEmpty")));
             
-            String valueStr = SecurityUtil.validateStringInput(request.getParameter("_values"));
+            String valueStr = StringUtil.stripAllHtmlTag(request.getParameter("_values"));
             String[] values = null;
             if (!valueStr.isEmpty()) {
                 values = valueStr.split(";");
