@@ -147,6 +147,7 @@
                                     }
                                     
                                     $(field).val(keyword);
+                                    $(field).css("width", "auto");
                                     $(element).data('chosen').results_search();
                                     ajaxcalls.push(params + "|" + keyword);
                                     chosenXhr = null;

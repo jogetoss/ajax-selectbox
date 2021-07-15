@@ -50,7 +50,7 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
 
     @Override
     public String getVersion() {
-        return "7.0.0";
+        return "7.0.1";
     }
 
     @Override
@@ -276,8 +276,8 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
         } else {
             AppDefinition appDef = AppUtil.getCurrentAppDefinition();
             
-            String param = StringUtil.escapeString(request.getParameter("_paramName"), StringUtil.TYPE_HTML, null);
-            String listId = StringUtil.escapeString(request.getParameter("_listId"), StringUtil.TYPE_HTML, null);
+            String param = SecurityUtil.validateStringInput(request.getParameter("_paramName"));
+            String listId = SecurityUtil.validateStringInput(request.getParameter("_listId"));
             
             String nonce = request.getParameter("_n");
             if (!SecurityUtil.verifyNonce(nonce, new String[]{"AjaxSelectbox", appDef.getAppId(), appDef.getVersion().toString(), param, listId, nonce})) {
@@ -287,17 +287,17 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
             
             //set propertise
             setProperty("listId", listId);
-            setProperty("idField", StringUtil.escapeString(request.getParameter("_idField"), StringUtil.TYPE_HTML, null));
-            setProperty("displayField", StringUtil.escapeString(request.getParameter("_displayField"), StringUtil.TYPE_HTML, null));
-            setProperty("allowEmpty", StringUtil.escapeString(request.getParameter("_allowEmpty"), StringUtil.TYPE_HTML, null));
+            setProperty("idField", SecurityUtil.validateStringInput(request.getParameter("_idField")));
+            setProperty("displayField", SecurityUtil.validateStringInput(request.getParameter("_displayField")));
+            setProperty("allowEmpty", SecurityUtil.validateStringInput(request.getParameter("_allowEmpty")));
             
-            String valueStr = StringUtil.escapeString(request.getParameter("_values"), StringUtil.TYPE_HTML, null);
+            String valueStr = SecurityUtil.validateStringInput(request.getParameter("_values"));
             String[] values = null;
             if (!valueStr.isEmpty()) {
                 values = valueStr.split(";");
             }
-            
-            String keyword = StringUtil.escapeString(request.getParameter("_keyword"), StringUtil.TYPE_HTML, null);
+
+            String keyword = StringUtil.stripAllHtmlTag(request.getParameter("_keyword"));
             
             Collection<Map> optionMap = getOptionMap(values, keyword, null);
             
