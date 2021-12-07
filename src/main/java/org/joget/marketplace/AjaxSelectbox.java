@@ -50,7 +50,7 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
 
     @Override
     public String getVersion() {
-        return "7.0.1";
+        return "7.0.2";
     }
 
     @Override
@@ -280,7 +280,7 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
             String listId = SecurityUtil.validateStringInput(request.getParameter("_listId"));
             
             String nonce = request.getParameter("_n");
-            if (!SecurityUtil.verifyNonce(nonce, new String[]{"AjaxSelectbox", appDef.getAppId(), appDef.getVersion().toString(), param, listId, nonce})) {
+            if (!SecurityUtil.verifyNonce(nonce, new String[]{"AjaxSelectbox", appDef.getAppId(), appDef.getVersion().toString(), param, listId})) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return;
             }
