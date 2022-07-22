@@ -50,7 +50,7 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
 
     @Override
     public String getVersion() {
-        return "7.0.2";
+        return "7.0.3";
     }
 
     @Override
