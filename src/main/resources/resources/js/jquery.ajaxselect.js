@@ -185,6 +185,7 @@
                                 } else if ($(el).is("input[type=checkbox], input[type=radio]")) {
                                     $(el).filter(":not(:checked)").remove();
                                 } 
+                                $(element).append('<option value=""></option>');
                                 $(element).trigger("chosen:updated");
                             }
                             return false;
