@@ -102,7 +102,6 @@
 
                         $(field).val(keyword);
                         $(field).css("width", "auto");
-                        $(element).data('chosen').results_search();
                     };
                         
                     var updateOptions = function(keyword, timeout, field) {
@@ -194,8 +193,16 @@
                         updateOptions(val, options.afterTypeDelay, this);
                     });
                     
-                    $(element).on("change", function(){
+                    $(element).on("change", function (){
                         $(".chosen-select").chosen({placeholder_text: getPlaceholder()}); 
+                        if ($(element).val() === "") {
+                            if (!$(chosenContainer).find('.chosen-drop').hasClass("reseted")) {
+                                updateOptions("", options.afterTypeDelay, $(chosenContainer).find('.chosen-search > input'));
+                                $(chosenContainer).find('.chosen-drop').addClass('reseted');
+                            }
+                        } else {
+                            $(chosenContainer).find('.chosen-drop').removeClass('reseted');
+                        }
                         $(element).trigger("chosen:updated");
                     });
                     $(element).on("jsection:hide", function(){
