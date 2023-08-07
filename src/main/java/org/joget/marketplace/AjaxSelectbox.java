@@ -50,7 +50,7 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
 
     @Override
     public String getVersion() {
-        return "7.0.5";
+        return "7.0.6";
     }
 
     @Override
@@ -193,80 +193,82 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
         AppDefinition appDef = AppUtil.getCurrentAppDefinition();
         DatalistDefinitionDao datalistDefinitionDao = (DatalistDefinitionDao) AppUtil.getApplicationContext().getBean("datalistDefinitionDao");
         DatalistDefinition datalistDefinition = datalistDefinitionDao.loadById(getPropertyString("listId"), appDef);
-        String json = datalistDefinition.getJson();
+        if (datalistDefinition != null && datalistDefinition.getJson() != null) {
+            String json = datalistDefinition.getJson();
 
-        //populate request params
-        Object requestParamsProperty = getProperty("requestParams");
-        if (formData != null && requestParamsProperty != null && requestParamsProperty instanceof Object[]) {
-            Form form = FormUtil.findRootForm(this);
+            //populate request params
+            Object requestParamsProperty = getProperty("requestParams");
+            if (formData != null && requestParamsProperty != null && requestParamsProperty instanceof Object[]) {
+                Form form = FormUtil.findRootForm(this);
 
-            for (Object param : ((Object[]) requestParamsProperty)) {
-                Map paramMap = ((Map)param);
-                String parameter = (String) paramMap.get("param");
-                String fieldId = (String) paramMap.get("field");
-                String defaultValue = (String) paramMap.get("defaultValue");
-                String[] paramValues = null;
-                String paramValue = "";
+                for (Object param : ((Object[]) requestParamsProperty)) {
+                    Map paramMap = ((Map)param);
+                    String parameter = (String) paramMap.get("param");
+                    String fieldId = (String) paramMap.get("field");
+                    String defaultValue = (String) paramMap.get("defaultValue");
+                    String[] paramValues = null;
+                    String paramValue = "";
 
-                if (fieldId != null && !fieldId.isEmpty()) {
-                    Element field = FormUtil.findElement(fieldId, form, formData);
-                    paramValues = FormUtil.getElementPropertyValues(field, formData);
-                }
-
-                if (!(paramValues != null && paramValues.length > 0)) {
-                    paramValues = new String[]{defaultValue};
-                }
-
-                paramValue = FormUtil.generateElementPropertyValues(paramValues);
-                json = json.replaceAll(StringUtil.escapeRegex("#requestParam."+parameter+"#"), StringUtil.escapeRegex(paramValue));
-            }
-        }
-
-        DataListService dataListService = (DataListService) AppUtil.getApplicationContext().getBean("dataListService");
-        DataList dataList = dataListService.fromJson(json);
-
-        DataListBinder binder = dataList.getBinder();
-        idField = getPropertyString("idField");
-
-        if (binder != null) {
-            Collection<DataListFilterQueryObject> queries = new ArrayList<DataListFilterQueryObject>();
-            DataListFilterQueryObject[] datalistFilter = dataList.getFilterQueryObjects();
-            queries.addAll(Arrays.asList(datalistFilter));
-            
-            if (idField == null || idField.isEmpty()) {
-                idField = binder.getPrimaryKeyColumnName();
-            }
-            
-            if (valueArray != null && valueArray.length > 0) {
-                List<String> values = Arrays.asList(valueArray);
-                
-                if (values != null && !values.isEmpty() && !"".equals(values.get(0))) {
-                    DataListFilterQueryObject queryObject = new DataListFilterQueryObject();
-                    
-                    String query = binder.getColumnName(idField) + " in (";
-                    for (String v : values) {
-                        query += "?,";
+                    if (fieldId != null && !fieldId.isEmpty()) {
+                        Element field = FormUtil.findElement(fieldId, form, formData);
+                        paramValues = FormUtil.getElementPropertyValues(field, formData);
                     }
-                    query = query.replaceFirst(",$", ")");
+
+                    if (!(paramValues != null && paramValues.length > 0)) {
+                        paramValues = new String[]{defaultValue};
+                    }
+
+                    paramValue = FormUtil.generateElementPropertyValues(paramValues);
+                    json = json.replaceAll(StringUtil.escapeRegex("#requestParam."+parameter+"#"), StringUtil.escapeRegex(paramValue));
+                }
+            }
+
+            DataListService dataListService = (DataListService) AppUtil.getApplicationContext().getBean("dataListService");
+            DataList dataList = dataListService.fromJson(json);
+
+            DataListBinder binder = dataList.getBinder();
+            idField = getPropertyString("idField");
+
+            if (binder != null) {
+                Collection<DataListFilterQueryObject> queries = new ArrayList<DataListFilterQueryObject>();
+                DataListFilterQueryObject[] datalistFilter = dataList.getFilterQueryObjects();
+                queries.addAll(Arrays.asList(datalistFilter));
+
+                if (idField == null || idField.isEmpty()) {
+                    idField = binder.getPrimaryKeyColumnName();
+                }
+
+                if (valueArray != null && valueArray.length > 0) {
+                    List<String> values = Arrays.asList(valueArray);
+
+                    if (values != null && !values.isEmpty() && !"".equals(values.get(0))) {
+                        DataListFilterQueryObject queryObject = new DataListFilterQueryObject();
+
+                        String query = binder.getColumnName(idField) + " in (";
+                        for (String v : values) {
+                            query += "?,";
+                        }
+                        query = query.replaceFirst(",$", ")");
+                        queryObject.setOperator("AND");
+                        queryObject.setQuery(query);
+                        queryObject.setValues(values.toArray(new String[0]));
+
+                        queries.add(queryObject);
+                    }
+                }
+
+                if (keyword != null && !keyword.isEmpty()) {
+                    DataListFilterQueryObject queryObject = new DataListFilterQueryObject();
+                    String query = binder.getColumnName(getPropertyString("displayField")) + " like ?";
                     queryObject.setOperator("AND");
                     queryObject.setQuery(query);
-                    queryObject.setValues(values.toArray(new String[0]));
+                    queryObject.setValues(new String[]{"%" + keyword + "%"});
 
                     queries.add(queryObject);
                 }
-            }
-            
-            if (keyword != null && !keyword.isEmpty()) {
-                DataListFilterQueryObject queryObject = new DataListFilterQueryObject();
-                String query = binder.getColumnName(getPropertyString("displayField")) + " like ?";
-                queryObject.setOperator("AND");
-                queryObject.setQuery(query);
-                queryObject.setValues(new String[]{"%" + keyword + "%"});
 
-                queries.add(queryObject);
+                rows = binder.getData(dataList, binder.getProperties(), queries.toArray(new DataListFilterQueryObject[0]), null, null, null, size);
             }
-            
-            rows = binder.getData(dataList, binder.getProperties(), queries.toArray(new DataListFilterQueryObject[0]), null, null, null, size);
         }
         return rows;
     }

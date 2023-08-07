@@ -157,40 +157,50 @@
                         }, timeout);
                     };
                     
-                    $(chosenContainer).find(".search-field > input, .chosen-search > input").bind('keyup', function() {
-                        var msg, untrimmed_val, val;
-                        untrimmed_val = $(this).val();
-                        val = $.trim($(this).val());
+                    var complete = true;
+                    $(chosenContainer).find(".search-field > input, .chosen-search > input").on('compositionstart', function () {
+                        complete = false;
+                    });
+                    
+                    $(chosenContainer).find(".search-field > input, .chosen-search > input").on('compositionend', function () {
+                        complete = true;
+                    });
                         
-                        msg = val.length < options.minTermLength ? options.keepTypingMsg : options.lookingForMsg;
-                        $(chosenContainer).find('.no-results').text(msg);
-                        
-                        if (val === $(this).data('prevVal')) {
-                            return false;
-                        }
-                        $(this).data('prevVal', val);
-                        
-                        if (timer !== null && timer !== undefined) {
-                            clearTimeout(timer);
-                            timer = null;
-                        }
-                        
-                        if (val.length < options.minTermLength) {
-                            //remove the non selected option when keyword length is 0 to clean the options.
-                            if (val.length === 0) {
-                                var el = $('[name=' + options.paramName + ']').filter("input[type=hidden]:not([disabled=true]), :enabled, [disabled=false]");
-                                if ($(el).is("select")) {
-                                    $(el).find("option:not(:selected)").remove();
-                                } else if ($(el).is("input[type=checkbox], input[type=radio]")) {
-                                    $(el).filter(":not(:checked)").remove();
-                                } 
-                                $(element).append('<option value=""></option>');
-                                $(element).trigger("chosen:updated");
+                    $(chosenContainer).find(".search-field > input, .chosen-search > input").bind('keyup', function () {
+                        if (complete) {
+                            var msg, untrimmed_val, val;
+                            untrimmed_val = $(this).val();
+                            val = $.trim($(this).val());
+
+                            msg = val.length < options.minTermLength ? options.keepTypingMsg : options.lookingForMsg;
+                            $(chosenContainer).find('.no-results').text(msg);
+
+                            if (val === $(this).data('prevVal')) {
+                                return false;
                             }
-                            return false;
+                            $(this).data('prevVal', val);
+
+                            if (timer !== null && timer !== undefined) {
+                                clearTimeout(timer);
+                                timer = null;
+                            }
+
+                            if (val.length < options.minTermLength) {
+                                //remove the non selected option when keyword length is 0 to clean the options.
+                                if (val.length === 0) {
+                                    var el = $('[name=' + options.paramName + ']').filter("input[type=hidden]:not([disabled=true]), :enabled, [disabled=false]");
+                                    if ($(el).is("select")) {
+                                        $(el).find("option:not(:selected)").remove();
+                                    } else if ($(el).is("input[type=checkbox], input[type=radio]")) {
+                                        $(el).filter(":not(:checked)").remove();
+                                    }
+                                    $(element).append('<option value=""></option>');
+                                    $(element).trigger("chosen:updated");
+                                }
+                                return false;
+                            }
+                            updateOptions(val, options.afterTypeDelay, this);
                         }
-                        
-                        updateOptions(val, options.afterTypeDelay, this);
                     });
                     
                     $(element).on("change", function (){
