@@ -50,7 +50,7 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
 
     @Override
     public String getVersion() {
-        return "7.0.6";
+        return "7.0.7";
     }
 
     @Override
@@ -144,22 +144,18 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
             options.put("", getPropertyString("placeholder"));
         }
         
-        if (keyword != null && !keyword.isEmpty()) {
-            addOptions(options, null, formData, keyword, null);
-        }  
-        if (valueArray != null && valueArray.length > 0 && !(valueArray.length == 1 && valueArray[0].isEmpty())) {
-            addOptions(options, valueArray, formData, null, null);
-        }
-        
-        if ((keyword == null || keyword.isEmpty())) {
+        if (keyword != null && !keyword.isEmpty() || 
+                (valueArray != null && valueArray.length > 0 && !(valueArray.length == 1 && valueArray[0].isEmpty()))){
+            addOptions(options, valueArray, formData, keyword, null);
+        } else {
             int number = 0;
             if (!getPropertyString("defaultOptions").isEmpty()) {
                 try {
                     number = Integer.parseInt(getPropertyString("defaultOptions"));
+                    addOptions(options, null, formData, null, number);
                 } catch (Exception e) {
                 }
             }
-            addOptions(options, null, formData, null, number);
         }
         
         Collection<Map> results = new ArrayList<Map>();
@@ -237,33 +233,39 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
                 if (idField == null || idField.isEmpty()) {
                     idField = binder.getPrimaryKeyColumnName();
                 }
-
-                if (valueArray != null && valueArray.length > 0) {
-                    List<String> values = Arrays.asList(valueArray);
-
-                    if (values != null && !values.isEmpty() && !"".equals(values.get(0))) {
-                        DataListFilterQueryObject queryObject = new DataListFilterQueryObject();
-
-                        String query = binder.getColumnName(idField) + " in (";
-                        for (String v : values) {
-                            query += "?,";
+                
+                //the query should be `where filter clauses and (existing values or keyword)`
+                String query = "";
+                List<String> values = new ArrayList<String>();
+                if (valueArray != null && valueArray.length > 0 && !(valueArray.length == 1 && valueArray[0].isEmpty())) {
+                    for (String v : valueArray) {
+                        if (!v.isEmpty()) {
+                            if (!query.isEmpty()) {
+                                query += ", ";
+                            }
+                            query += "?";
+                            values.add(v);
                         }
-                        query = query.replaceFirst(",$", ")");
-                        queryObject.setOperator("AND");
-                        queryObject.setQuery(query);
-                        queryObject.setValues(values.toArray(new String[0]));
-
-                        queries.add(queryObject);
+                    }
+                    if (!query.isEmpty()) {
+                        query = binder.getColumnName(idField) + " in (" + query + ")";
                     }
                 }
-
+                
                 if (keyword != null && !keyword.isEmpty()) {
+                    if (!query.isEmpty()) {
+                        query += " OR ";
+                    }
+                    
+                    query += binder.getColumnName(getPropertyString("displayField")) + " like ?";
+                    values.add("%" + keyword + "%");
+                }
+                
+                if (!query.isEmpty()) {
                     DataListFilterQueryObject queryObject = new DataListFilterQueryObject();
-                    String query = binder.getColumnName(getPropertyString("displayField")) + " like ?";
                     queryObject.setOperator("AND");
-                    queryObject.setQuery(query);
-                    queryObject.setValues(new String[]{"%" + keyword + "%"});
-
+                    queryObject.setQuery("(" + query + ")");
+                    queryObject.setValues(values.toArray(new String[0]));
                     queries.add(queryObject);
                 }
 

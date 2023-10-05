@@ -47,6 +47,8 @@
                 $(element).chosen({width: width, placeholder_text : getPlaceholder()});
                 
                 if (!readOnly) {
+                    methods.setChosenObject($(element));
+                    
                     var chosenContainer = $(element).next('.chosen-container');
                     
                     var getValues = function (name) {
@@ -102,9 +104,13 @@
 
                         $(field).val(keyword);
                         $(field).css("width", "auto");
+                        
+                        //hightlight the options with keyword
+                        $(element).data("chosen").results_search();
                     };
                         
                     var updateOptions = function(keyword, timeout, field) {
+                        //get current selected values
                         var values = getValues(options.paramName);
                         var valueStr = "";
                         if (values !== null && values !== undefined) {
@@ -116,6 +122,7 @@
                         }
                         
                         timer = setTimeout(function() {
+                            //get dependency field values to construct URL
                             var params = "";
                             if (options.requestParams !== undefined) {
                                 params = FormUtil.getFieldsAsUrlQueryString(options.requestParams, $(this).closest("div.subform-container"));
@@ -125,7 +132,7 @@
                                 }
                             }
                             
-                            if (ajaxcalls[params + "|" + keyword] !== undefined){ //if options of a keyword is available, just use it
+                            if (ajaxcalls[params + "|" + valueStr + "|" + keyword] !== undefined){ //if options of a keyword is available, just use it
                                 renderOptions(field, keyword, ajaxcalls[params + "|" + keyword], values);
                                 return;
                             }
@@ -149,7 +156,7 @@
                                     _keyword : keyword
                                 },
                                 success: function(data){
-                                    ajaxcalls[params + "|" + keyword] = data; //store the options of a keyword for later used
+                                    ajaxcalls[params + "|" + valueStr + "|" + keyword] = data; //store the options of a keyword for later used
                                     renderOptions(field, keyword, data, values);
                                     chosenXhr = null;
                                 }
@@ -203,6 +210,31 @@
                         }
                     });
                     
+                    if (options.requestParams !== undefined && options.requestParams.length > 0) {
+                        var fields = []; 
+
+                        for (var i = 0; i < options.requestParams.length; i++) {
+                            var cf = options.requestParams[i].field;
+                            fields.push(cf);                      
+                        }
+
+                        for (var i in fields) {
+                            FormUtil.setControlField(fields[i]);
+                        }
+
+                        var updateDependencyOptions = function() {
+                            updateOptions("", options.afterTypeDelay, $(chosenContainer).find('.chosen-single > span'));
+                        };
+
+                        for (var i in fields) {
+                            $('body').off("change", '[name='+fields[i]+']:not(form)', updateDependencyOptions);
+                            $('body').on("change", '[name='+fields[i]+']:not(form)', updateDependencyOptions);
+                        }
+
+                        $(element).off("jsection:show." + options.paramName);
+                        $(element).on("jsection:show." + options.paramName, updateDependencyOptions);
+                    }
+   
                     $(element).on("change", function (){
                         $(".chosen-select").chosen({placeholder_text: getPlaceholder()}); 
                         if ($(element).val() === "") {
@@ -215,12 +247,15 @@
                         }
                         $(element).trigger("chosen:updated");
                     });
+                    
                     $(element).on("jsection:hide", function(){
                         $(element).trigger("chosen:updated");
                     });
+                    
                     $(element).on("jsection:show", function(){
                         $(element).trigger("chosen:updated");
                     });
+                    
                     setTimeout(function(){
                         $(element).trigger("chosen:updated");
                     }, 200);
@@ -231,6 +266,16 @@
                 var hidden = $(element).closest(".ui-screen-hidden");
                 $(hidden).find(".chosen-container").insertAfter(hidden);
             });
+        },
+        
+        //find the chosen object
+        setChosenObject : function(el) {
+            for (const key in $(el)[0]) {
+                if (key.indexOf("jQuery") !== -1 && $(el)[0][key]["chosen"] !== undefined) {
+                    $(el).data("chosen", $(el)[0][key]["chosen"]);
+                    break;
+                }
+            }
         }
     };
 
