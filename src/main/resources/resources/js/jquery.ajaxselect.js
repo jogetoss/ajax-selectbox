@@ -257,6 +257,7 @@
                     });
                     
                     setTimeout(function(){
+                        $(element).append('<option value=""></option>');
                         $(element).trigger("chosen:updated");
                     }, 200);
                 } else {
