@@ -57,3 +57,9 @@
         </script>
     </#if>
 </div>
+
+<style>
+div.chosen-container.chosen-container-multi .chosen-choices li.search-field > input {
+    height: auto !important;
+}
+</style>
