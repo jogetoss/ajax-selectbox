@@ -47,6 +47,7 @@
                     displayField : "${element.properties.displayField!}",
                     contextPath : "${request.contextPath}",
                     allowEmpty : "${element.properties.allowEmpty!}",
+                    defaultOptions : "${element.properties.defaultOptions!}",
                     minTermLength : ${element.properties.minTermLength!},
                     keepTypingMsg : "${element.properties.keepTypingMsg!}",
                     lookingForMsg : "${element.properties.lookingForMsg!}",

@@ -50,7 +50,7 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
 
     @Override
     public String getVersion() {
-        return "8.0.0";
+        return "8.0.1";
     }
 
     @Override
@@ -297,7 +297,8 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
             setProperty("idField", SecurityUtil.validateStringInput(request.getParameter("_idField")));
             setProperty("displayField", SecurityUtil.validateStringInput(request.getParameter("_displayField")));
             setProperty("allowEmpty", SecurityUtil.validateStringInput(request.getParameter("_allowEmpty")));
-            
+            setProperty("defaultOptions", SecurityUtil.validateStringInput(request.getParameter("_defaultOptions")));
+
             String valueStr = StringUtil.stripAllHtmlTag(request.getParameter("_values"));
             String[] values = null;
             if (!valueStr.isEmpty()) {

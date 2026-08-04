@@ -75,6 +75,7 @@
                         var hasValue = false;
                         var hasChanges = false;
                         $(element).empty();
+                        $(element).append('<option value=""></option>');
                         for (var i=0, len=data.length; i < len; i++) {
                             selectoptions = [];
                             if ($.inArray(data[i].value, selectoptions) === -1) {
@@ -97,14 +98,19 @@
                             for (var dv in defaultValues) {
                                 $(element).find("option[value='"+defaultValues[dv]+"']").attr("selected", "selected");
                             }
+                        } else if (!hasValue) {
+                            $(element).find("option[value='']").attr("selected", "selected");
                         }
                         if (hasChanges && !$(element).is(".section-visibility-disabled")) {
-                            $('[name='+options.paramName+']:not(form):not(.section-visibility-disabled)').trigger("change");
+                            $('[name='+options.paramName+']:not(form):not(.section-visibility-disabled)').not(element).trigger("change");
                         }
+
+                        //let chosen re-parse the updated option list before searching/highlighting it
+                        $(element).trigger("chosen:updated");
 
                         $(field).val(keyword);
                         $(field).css("width", "auto");
-                        
+
                         //hightlight the options with keyword
                         $(element).data("chosen").results_search();
                     };
@@ -133,7 +139,7 @@
                             }
                             
                             if (ajaxcalls[params + "|" + valueStr + "|" + keyword] !== undefined){ //if options of a keyword is available, just use it
-                                renderOptions(field, keyword, ajaxcalls[params + "|" + keyword], values);
+                                renderOptions(field, keyword, ajaxcalls[params + "|" + valueStr + "|" + keyword], values);
                                 return;
                             }
                             
@@ -152,6 +158,7 @@
                                     _idField: options.idField,
                                     _displayField: options.displayField,
                                     _allowEmpty: options.allowEmpty,
+                                    _defaultOptions: options.defaultOptions,
                                     _values : valueStr,
                                     _keyword : keyword
                                 },
@@ -196,13 +203,24 @@
                                 //remove the non selected option when keyword length is 0 to clean the options.
                                 if (val.length === 0) {
                                     var el = $('[name=' + options.paramName + ']').filter("input[type=hidden]:not([disabled=true]), :enabled, [disabled=false]");
+                                    var hasSelection = false;
                                     if ($(el).is("select")) {
-                                        $(el).find("option:not(:selected)").remove();
+                                        hasSelection = $(el).find("option:selected").filter(function(){ return $(this).val() !== ""; }).length > 0;
                                     } else if ($(el).is("input[type=checkbox], input[type=radio]")) {
-                                        $(el).filter(":not(:checked)").remove();
+                                        hasSelection = $(el).filter(":checked").length > 0;
                                     }
-                                    $(element).append('<option value=""></option>');
-                                    $(element).trigger("chosen:updated");
+                                    if (hasSelection) {
+                                        if ($(el).is("select")) {
+                                            $(el).find("option:not(:selected)").remove();
+                                        } else if ($(el).is("input[type=checkbox], input[type=radio]")) {
+                                            $(el).filter(":not(:checked)").remove();
+                                        }
+                                        $(element).append('<option value=""></option>');
+                                        $(element).trigger("chosen:updated");
+                                    } else {
+                                        //nothing was actually selected while searching, restore the default option list
+                                        updateOptions("", options.afterTypeDelay, this);
+                                    }
                                 }
                                 return false;
                             }
