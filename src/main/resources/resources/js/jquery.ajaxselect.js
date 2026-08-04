@@ -71,6 +71,8 @@
                     
                     //render the options and update the autocomplate list
                     var renderOptions = function(field, keyword, data, values) {
+                        //snapshot before chosen:updated resets the search input, so we know what the user actually had typed
+                        var typedValBeforeRender = $.trim($(field).val());
                         var defaultValues = [];
                         var hasValue = false;
                         var hasChanges = false;
@@ -108,8 +110,10 @@
                         //let chosen re-parse the updated option list before searching/highlighting it
                         $(element).trigger("chosen:updated");
 
-                        $(field).val(keyword);
-                        $(field).css("width", "auto");
+                        //only restore the keyword if the user hasn't since typed something newer (avoids clobbering in-progress typing on a delayed/out-of-order response)
+                        if (typedValBeforeRender === keyword) {
+                            $(field).val(keyword);
+                        }
 
                         //hightlight the options with keyword
                         $(element).data("chosen").results_search();
