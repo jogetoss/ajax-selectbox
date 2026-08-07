@@ -110,10 +110,9 @@
                         //let chosen re-parse the updated option list before searching/highlighting it
                         $(element).trigger("chosen:updated");
 
-                        //only restore the keyword if the user hasn't since typed something newer (avoids clobbering in-progress typing on a delayed/out-of-order response)
-                        if (typedValBeforeRender === keyword) {
-                            $(field).val(keyword);
-                        }
+                        //restore whatever the user actually had typed - chosen:updated above blanks the search input as a side effect,
+                        //and a delayed/out-of-order response's own keyword may be stale, so just put back the real pre-render snapshot
+                        $(field).val(typedValBeforeRender);
 
                         //hightlight the options with keyword
                         $(element).data("chosen").results_search();
