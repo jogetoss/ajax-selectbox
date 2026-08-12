@@ -114,8 +114,13 @@
                         //and a delayed/out-of-order response's own keyword may be stale, so just put back the real pre-render snapshot
                         $(field).val(typedValBeforeRender);
 
-                        //hightlight the options with keyword
-                        $(element).data("chosen").results_search();
+                        //hightlight the options with keyword - but only if the dropdown is actually meant to be open,
+                        //since chosen's own results_search() force-opens it otherwise (e.g. right after a selection,
+                        //when chosen deliberately closes the dropdown but still refocuses the search field)
+                        var chosenInstance = $(element).data("chosen");
+                        if (chosenInstance.results_showing) {
+                            chosenInstance.results_search();
+                        }
                     };
                         
                     var updateOptions = function(keyword, timeout, field) {
@@ -130,22 +135,22 @@
                             }
                         }
                         
-                        timer = setTimeout(function() {
-                            //get dependency field values to construct URL
-                            var params = "";
-                            if (options.requestParams !== undefined) {
-                                params = FormUtil.getFieldsAsUrlQueryString(options.requestParams, $(this).closest("div.subform-container"));
+                        //get dependency field values to construct URL
+                        var params = "";
+                        if (options.requestParams !== undefined) {
+                            params = FormUtil.getFieldsAsUrlQueryString(options.requestParams, $(field).closest("div.subform-container"));
 
-                                if (params !== "") {
-                                    params = "?" + params; 
-                                }
+                            if (params !== "") {
+                                params = "?" + params;
                             }
-                            
-                            if (ajaxcalls[params + "|" + valueStr + "|" + keyword] !== undefined){ //if options of a keyword is available, just use it
-                                renderOptions(field, keyword, ajaxcalls[params + "|" + valueStr + "|" + keyword], values);
-                                return;
-                            }
-                            
+                        }
+
+                        if (ajaxcalls[params + "|" + valueStr + "|" + keyword] !== undefined){ //already fetched this exact query before, render immediately without waiting for the debounce delay
+                            renderOptions(field, keyword, ajaxcalls[params + "|" + valueStr + "|" + keyword], values);
+                            return;
+                        }
+
+                        timer = setTimeout(function() {
                             if (chosenXhr) {
                                 chosenXhr.abort();
                             }
@@ -182,8 +187,19 @@
                     $(chosenContainer).find(".search-field > input, .chosen-search > input").on('compositionend', function () {
                         complete = true;
                     });
-                        
-                    $(chosenContainer).find(".search-field > input, .chosen-search > input").bind('keyup', function () {
+
+                    //reload the full option list every time the dropdown is genuinely opened, regardless of whether
+                    //a value is already selected. chosen:showing_dropdown is chosen's own event for this and only
+                    //fires when it actually shows the dropdown - unlike a plain focus handler, it isn't confused by
+                    //chosen refocusing the search field as part of its close/cleanup flow right after a selection.
+                    $(element).on("chosen:showing_dropdown", function () {
+                        updateOptions("", options.afterTypeDelay, $(chosenContainer).find('.chosen-search > input, .search-field > input'));
+                    });
+
+                    //bound to both keyup and input: on some browsers/interactions (e.g. reopening an already-selected
+                    //single-select's dropdown), keyup does not reliably fire on the reactivated search field, while
+                    //input always does. The val===prevVal guard below dedupes when both fire for the same keystroke.
+                    $(chosenContainer).find(".search-field > input, .chosen-search > input").on('keyup input', function () {
                         if (complete) {
                             var msg, untrimmed_val, val;
                             untrimmed_val = $(this).val();
@@ -203,27 +219,26 @@
                             }
 
                             if (val.length < options.minTermLength) {
-                                //remove the non selected option when keyword length is 0 to clean the options.
-                                if (val.length === 0) {
-                                    var el = $('[name=' + options.paramName + ']').filter("input[type=hidden]:not([disabled=true]), :enabled, [disabled=false]");
-                                    var hasSelection = false;
+                                var el = $('[name=' + options.paramName + ']').filter("input[type=hidden]:not([disabled=true]), :enabled, [disabled=false]");
+                                var hasSelection = false;
+                                if ($(el).is("select")) {
+                                    hasSelection = $(el).find("option:selected").filter(function(){ return $(this).val() !== ""; }).length > 0;
+                                } else if ($(el).is("input[type=checkbox], input[type=radio]")) {
+                                    hasSelection = $(el).filter(":checked").length > 0;
+                                }
+                                if (!hasSelection) {
+                                    //nothing is actually selected - restore the default option list so this shorter keyword filters
+                                    //against the full default set instead of whatever narrower result was left from a deeper search
+                                    updateOptions("", options.afterTypeDelay, this);
+                                } else if (val.length === 0) {
+                                    //remove the non selected option when keyword length is 0 to clean the options.
                                     if ($(el).is("select")) {
-                                        hasSelection = $(el).find("option:selected").filter(function(){ return $(this).val() !== ""; }).length > 0;
+                                        $(el).find("option:not(:selected)").remove();
                                     } else if ($(el).is("input[type=checkbox], input[type=radio]")) {
-                                        hasSelection = $(el).filter(":checked").length > 0;
+                                        $(el).filter(":not(:checked)").remove();
                                     }
-                                    if (hasSelection) {
-                                        if ($(el).is("select")) {
-                                            $(el).find("option:not(:selected)").remove();
-                                        } else if ($(el).is("input[type=checkbox], input[type=radio]")) {
-                                            $(el).filter(":not(:checked)").remove();
-                                        }
-                                        $(element).append('<option value=""></option>');
-                                        $(element).trigger("chosen:updated");
-                                    } else {
-                                        //nothing was actually selected while searching, restore the default option list
-                                        updateOptions("", options.afterTypeDelay, this);
-                                    }
+                                    $(element).append('<option value=""></option>');
+                                    $(element).trigger("chosen:updated");
                                 }
                                 return false;
                             }
