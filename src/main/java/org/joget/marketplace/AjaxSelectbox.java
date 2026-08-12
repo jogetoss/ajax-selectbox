@@ -144,17 +144,24 @@ public class AjaxSelectbox extends SelectBox implements PluginWebSupport, FormBu
             options.put("", getPropertyString("placeholder"));
         }
         
-        if (keyword != null && !keyword.isEmpty() || 
-                (valueArray != null && valueArray.length > 0 && !(valueArray.length == 1 && valueArray[0].isEmpty()))){
+        boolean hasValues = valueArray != null && valueArray.length > 0 && !(valueArray.length == 1 && valueArray[0].isEmpty());
+
+        if (keyword != null && !keyword.isEmpty()) {
             addOptions(options, valueArray, formData, keyword, null);
         } else {
+            //no active search - always show the default list, regardless of whether a value is already selected
             int number = 0;
             if (!getPropertyString("defaultOptions").isEmpty()) {
                 try {
                     number = Integer.parseInt(getPropertyString("defaultOptions"));
-                    addOptions(options, null, formData, null, number);
                 } catch (Exception e) {
                 }
+            }
+            addOptions(options, null, formData, null, number);
+
+            //make sure the currently selected value(s) stay represented even if outside the default subset
+            if (hasValues) {
+                addOptions(options, valueArray, formData, null, null);
             }
         }
         

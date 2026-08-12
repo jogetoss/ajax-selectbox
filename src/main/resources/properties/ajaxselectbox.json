@@ -99,7 +99,7 @@
                 "name": "afterTypeDelay",
                 "label": "@@AjaxSelectbox.afterTypeDelay@@",
                 "type": "textfield",
-                "value": "300",
+                "value": "150",
                 "required": "True",
                 "regex_validation": "^[1-9]+[0-9]*$",
                 "validation_message": "@@AjaxSelectbox.numberOnly@@"
