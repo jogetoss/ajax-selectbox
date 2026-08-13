@@ -63,4 +63,10 @@
 div.chosen-container.chosen-container-multi .chosen-choices li.search-field > input {
     height: auto !important;
 }
+/* the theme sets .active-result to display:flex, which splits the highlighted search match
+   into separate flex items and drops the whitespace between them (e.g. "John Smith" search
+   results render as "JohnSmith" when matching "Smith") - restore normal inline text flow */
+div.chosen-container .chosen-results li.active-result {
+    display: block !important;
+}
 </style>
