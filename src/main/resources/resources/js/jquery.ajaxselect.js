@@ -183,9 +183,15 @@
                     $(chosenContainer).find(".search-field > input, .chosen-search > input").on('compositionstart', function () {
                         complete = false;
                     });
-                    
+
+                    //process the field's current (now finalized) value directly here rather than waiting for a
+                    //subsequent keyup/input event to notice complete flipped back to true - the order in which
+                    //compositionend and its accompanying input event fire is inconsistent across browsers/IMEs
+                    //(e.g. Windows Japanese IME vs Android Gboard), so waiting for that next event was leaving
+                    //the search stuck until the user pressed Enter/Space to generate an unrelated new event.
                     $(chosenContainer).find(".search-field > input, .chosen-search > input").on('compositionend', function () {
                         complete = true;
+                        handleSearchInput.call(this);
                     });
 
                     //reload the full option list every time the dropdown is genuinely opened, regardless of whether
@@ -196,10 +202,7 @@
                         updateOptions("", options.afterTypeDelay, $(chosenContainer).find('.chosen-search > input, .search-field > input'));
                     });
 
-                    //bound to both keyup and input: on some browsers/interactions (e.g. reopening an already-selected
-                    //single-select's dropdown), keyup does not reliably fire on the reactivated search field, while
-                    //input always does. The val===prevVal guard below dedupes when both fire for the same keystroke.
-                    $(chosenContainer).find(".search-field > input, .chosen-search > input").on('keyup input', function () {
+                    var handleSearchInput = function () {
                         if (complete) {
                             var msg, untrimmed_val, val;
                             untrimmed_val = $(this).val();
@@ -244,8 +247,13 @@
                             }
                             updateOptions(val, options.afterTypeDelay, this);
                         }
-                    });
-                    
+                    };
+
+                    //bound to both keyup and input: on some browsers/interactions (e.g. reopening an already-selected
+                    //single-select's dropdown), keyup does not reliably fire on the reactivated search field, while
+                    //input always does. The val===prevVal guard below dedupes when both fire for the same keystroke.
+                    $(chosenContainer).find(".search-field > input, .chosen-search > input").on('keyup input', handleSearchInput);
+
                     if (options.requestParams !== undefined && options.requestParams.length > 0) {
                         var fields = []; 
 
