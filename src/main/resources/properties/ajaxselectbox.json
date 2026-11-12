@@ -23,12 +23,67 @@
                 "type": "textfield"
             },
             {
-                "name" : "listId",
-                "label" : "@@AjaxSelectbox.chooseDatalist@@",
-                "description" : "@@form.popupselectbox.listId.desc@@",
-                "type" : "selectbox",
-                "required" : "True",
-                "options_ajax" : "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/datalist/options"
+                "name": "dataSource",
+                "label": "@@AjaxSelectbox.dataSource@@",
+                "type": "radio",
+                "value": "datalist",
+                "options": [
+                    {
+                        "value": "datalist",
+                        "label": "@@AjaxSelectbox.dataSource.datalist@@"
+                    },
+                    {
+                        "value": "binder",
+                        "label": "@@AjaxSelectbox.dataSource.binder@@"
+                    }
+                ]
+            },
+            {
+                "name": "listId",
+                "label": "@@AjaxSelectbox.chooseDatalist@@",
+                "description": "@@form.popupselectbox.listId.desc@@",
+                "type": "selectbox",
+                "required": "True",
+                "options_ajax": "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/datalist/options",
+                "control_field": "dataSource",
+                "control_value": "datalist",
+                "control_use_regex": "false"
+            },
+            {
+                "name": "optionsBinder",
+                "label": "@@AjaxSelectbox.optionsBinder@@",
+                "description": "@@AjaxSelectbox.optionsBinder.desc@@",
+                "type": "elementselect",
+                "required": "True",
+                "options": [
+                    {
+                        "value": "",
+                        "label": ""
+                    },
+                    {
+                        "value": "org.joget.marketplace.EnhancedJsonApiFormOptionsBinder",
+                        "label": "@@AjaxSelectbox.binder.enhancedJsonApi@@"
+                    },
+                    {
+                        "value": "org.joget.apps.form.lib.JsonApiFormOptionsBinder",
+                        "label": "@@AjaxSelectbox.binder.jsonApi@@"
+                    }
+                ],
+                "url": "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions",
+                "control_field": "dataSource",
+                "control_value": "binder",
+                "control_use_regex": "false"
+            },
+            {
+                "name": "maxResults",
+                "label": "@@AjaxSelectbox.maxResults@@",
+                "description": "@@AjaxSelectbox.maxResults.desc@@",
+                "type": "textfield",
+                "regex_validation": "^[0-9]*$",
+                "validation_message": "@@AjaxSelectbox.maxResults.invalid@@",
+                "control_field": "dataSource",
+                "control_value": "binder",
+                "control_use_regex": "false"
             }
         ]
     },
@@ -46,15 +101,21 @@
                 "type": "textfield"
             },
             {
-                "name":"idField",
-                "label":"@@form.popupselectbox.idField@@",
-                "type" : "textfield"
+                "name": "idField",
+                "label": "@@form.popupselectbox.idField@@",
+                "type": "textfield",
+                "control_field": "dataSource",
+                "control_value": "datalist",
+                "control_use_regex": "false"
             },
             {
-                "name":"displayField",
-                "label":"@@form.popupselectbox.displayField@@",
-                "type" : "textfield",
-                "required": "true"
+                "name": "displayField",
+                "label": "@@form.popupselectbox.displayField@@",
+                "type": "textfield",
+                "required": "true",
+                "control_field": "dataSource",
+                "control_value": "datalist",
+                "control_use_regex": "false"
             },
             {
                 "name": "multiple",
@@ -71,7 +132,7 @@
                 "name": "allowEmpty",
                 "label": "@@AjaxSelectbox.allowEmpty@@",
                 "type": "checkbox",
-                "value" : "true",
+                "value": "true",
                 "options": [
                     {
                         "value": "true",

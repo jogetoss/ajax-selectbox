@@ -155,21 +155,28 @@
                                 chosenXhr.abort();
                             }
                             
+                            var requestData = {
+                                _paramName: options.paramName,
+                                _n: options.nonce,
+                                _allowEmpty: options.allowEmpty,
+                                _values : valueStr,
+                                _keyword : keyword
+                            };
+                            if (options.dataSource === "binder") {
+                                //the binder and its settings travel encrypted - they are not readable or changeable here
+                                requestData._binderData = options.binderData;
+                            } else {
+                                requestData._listId = options.listId;
+                                requestData._idField = options.idField;
+                                requestData._displayField = options.displayField;
+                                requestData._defaultOptions = options.defaultOptions;
+                            }
+
                             chosenXhr = $.ajax({
                                 dataType: "json",
                                 url: options.contextPath + "/web/json/app/"+options.appId+"/"+options.appVersion+"/plugin/org.joget.marketplace.AjaxSelectbox/service" + params,
                                 method: "POST",
-                                data: {
-                                    _paramName: options.paramName,
-                                    _n: options.nonce,
-                                    _listId: options.listId,
-                                    _idField: options.idField,
-                                    _displayField: options.displayField,
-                                    _allowEmpty: options.allowEmpty,
-                                    _defaultOptions: options.defaultOptions,
-                                    _values : valueStr,
-                                    _keyword : keyword
-                                },
+                                data: requestData,
                                 success: function(data){
                                     ajaxcalls[params + "|" + valueStr + "|" + keyword] = data; //store the options of a keyword for later used
                                     renderOptions(field, keyword, data, values);

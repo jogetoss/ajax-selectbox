@@ -48,6 +48,8 @@
                     contextPath : "${request.contextPath}",
                     allowEmpty : "${element.properties.allowEmpty!}",
                     defaultOptions : "${element.properties.defaultOptions!}",
+                    dataSource : "${dataSource!}",
+                    binderData : "${binderData!?js_string}",
                     minTermLength : ${element.properties.minTermLength!},
                     keepTypingMsg : "${element.properties.keepTypingMsg!}",
                     lookingForMsg : "${element.properties.lookingForMsg!}",
